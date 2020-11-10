@@ -12,10 +12,12 @@ package driver
 
 import (
 	"bytes"
+	"encoding/hex"
 	"fmt"
 	"image"
 	"image/jpeg"
 	"image/png"
+	"net"
 	"os"
 	"time"
 
@@ -81,6 +83,43 @@ func (s *SimpleDriver) HandleReadCommands(deviceName string, protocols map[strin
 
 	res = make([]*dsModels.CommandValue, 1)
 	now := time.Now().UnixNano() / int64(time.Millisecond)
+	{
+		var connEdgex net.Conn
+		connEdgex, _ = net.Dial("tcp", "192.168.1.41:55555")
+
+		buff := make([]byte, 13)
+		buff[0] = 0x08
+		buff[1] = 0x00
+		buff[2] = 0x00
+		buff[3] = 0x06
+		buff[4] = 0x05
+		buff[5] = 0x40
+		buff[6] = 0x04
+		buff[7] = 0x10
+
+		buff[8] = 0x00
+		buff[9] = 0x00
+		buff[10] = 0x00
+		buff[11] = 0x00
+		buff[12] = 0x00
+
+		//// what to send?
+		connEdgex.Write(buff)
+		time.Sleep(1000 * time.Millisecond)
+
+		for i := range buff {
+			buff[i] = 0
+		}
+
+		buffRec := make([]byte, 1024)
+		// wait for reply
+		n, _ := connEdgex.Read(buffRec)
+		//log.Printf("Receive: %s", buff[:n])
+
+		fmt.Print("Message from server: " + hex.EncodeToString(buffRec[:n]) + "\n")
+
+	}
+
 	if reqs[0].DeviceResourceName == "SwitchButton" {
 		cv, _ := dsModels.NewBoolValue(reqs[0].DeviceResourceName, now, s.switchButton)
 		res[0] = cv
@@ -102,8 +141,7 @@ func (s *SimpleDriver) HandleReadCommands(deviceName string, protocols map[strin
 // a ResourceOperation for a specific device resource.
 // Since the commands are actuation commands, params provide parameters for the individual
 // command.
-func (s *SimpleDriver) HandleWriteCommands(deviceName string, protocols map[string]contract.ProtocolProperties, reqs []dsModels.CommandRequest,
-	params []*dsModels.CommandValue) error {
+func (s *SimpleDriver) HandleWriteCommands(deviceName string, protocols map[string]contract.ProtocolProperties, reqs []dsModels.CommandRequest, params []*dsModels.CommandValue) error {
 
 	if len(reqs) != 1 {
 		err := fmt.Errorf("SimpleDriver.HandleWriteCommands; too many command requests; only one supported")
@@ -126,8 +164,7 @@ func (s *SimpleDriver) HandleWriteCommands(deviceName string, protocols map[stri
 
 // Stop the protocol-specific DS code to shutdown gracefully, or
 // if the force parameter is 'true', immediately. The driver is responsible
-// for closing any in-use channels, including the channel used to send async
-// readings (if supported).
+// readings (if supported).// for closing any in-use channels, including the channel used to send async
 func (s *SimpleDriver) Stop(force bool) error {
 	s.lc.Debug(fmt.Sprintf("SimpleDriver.Stop called: force=%v", force))
 	return nil

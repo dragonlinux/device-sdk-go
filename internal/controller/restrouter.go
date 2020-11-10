@@ -8,6 +8,7 @@
 package controller
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/edgexfoundry/device-sdk-go/internal/common"
@@ -16,6 +17,8 @@ import (
 )
 
 func InitRestRoutes() *mux.Router {
+	fmt.Println("--------------------> InitRestRoutes")
+
 	r := mux.NewRouter().PathPrefix(common.APIv1Prefix).Subrouter()
 
 	common.LoggingClient.Debug("init status rest controller")

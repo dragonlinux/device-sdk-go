@@ -1,5 +1,7 @@
 module github.com/edgexfoundry/device-sdk-go
 
+go 1.14
+
 require (
 	github.com/edgexfoundry/go-mod-core-contracts v0.1.0
 	github.com/edgexfoundry/go-mod-registry v0.1.0

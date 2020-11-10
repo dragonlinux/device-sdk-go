@@ -118,6 +118,8 @@ func (s *SimpleDriver) HandleReadCommands(deviceName string, protocols map[strin
 
 		fmt.Print("Message from server: " + hex.EncodeToString(buffRec[:n]) + "\n")
 
+		connEdgex.Close()
+
 	}
 
 	if reqs[0].DeviceResourceName == "SwitchButton" {
